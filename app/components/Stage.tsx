@@ -30,6 +30,7 @@ import { transcode } from "buffer";
 type StageProps = {
   animRef: RefObject<AnimRef | null>;
   onReady: Function;
+  onNewFrame: Function;
 };
 
 const Stage = memo(forwardRef(
