@@ -15,25 +15,29 @@ import {
   IconRepeatOff,
 } from "@tabler/icons-react";
 import { Frame, Layer } from "../lib/Anim";
-import { useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import Menu from "./Menu";
 
 type TimelineProps = {
-  currentLayer: number,
-  currentFrame: number,
-  frameRange: number[],
-  layers: Layer[],
-  playing: boolean,
-  isLooping: boolean,
-  onToggleLoop: Function,
-  onTogglePlay: Function,
-  onToggleLock: Function,
-  onToggleVisible: Funtion,
-  onAddLayer: Function,
-  onChangeLayerName: Function
+  currentLayer: number;
+  frameRange: number[];
+  layers: Layer[];
+  playing: boolean;
+  isLooping: boolean;
+  onToggleLoop: () => void;
+  onTogglePlay: () => void;
+  onToggleLock: (layerId: string,) => void;
+  onToggleVisible: (layerId: string,) => void;
+  onAddLayer: () => void;
+  onActiveLayer: (layerIndex: number) => void;
+  onChangeLayerName: (layerId: string, name: string) => void;
+  onLayerUp: (layerIndex: number) => void;
+  onLayerDown: (layerIndex: number) => void;
+  onChangeCurrentFrame: (newFrameIndex: number) => void;
+  onChangeFrameRange: (frameStart: number, frameEnd: number) => void;
 };
 
 export default function Timeline({
-  currentFrame,
   currentLayer,
   frameRange,
   layers,
@@ -46,20 +50,24 @@ export default function Timeline({
   onActiveLayer,
   onAddLayer,
   onChangeLayerName,
+  onChangeCurrentFrame,
+  onChangeFrameRange,
+  onLayerDown,
+  onLayerUp
 }: TimelineProps) {
-  const layersRef = useRef<HTMLDivElement|null>(null);
-  const tickRef = useRef<HTMLDivElement|null>(null);
-  const graphRef = useRef<HTMLDivElement|null>(null);
-  const playerRef = useRef<HTMLDivElement|null>(null);
+  const layersRef = useRef<HTMLDivElement | null>(null);
+  const tickRef = useRef<HTMLDivElement | null>(null);
+  const graphRef = useRef<HTMLDivElement | null>(null);
+  const playerRef = useRef<HTMLDivElement | null>(null);
 
   const [posX, setPosX] = useState(0);
-  const [active, setActive] = useState(false);
+  const [active, setActive] = useState("");
   const ticks = [];
   const time = 25;
 
   for (let i = 0; i < time; ++i) {
     ticks.push(
-      <div key={i} className="not-first:-ml-px!">
+      <div key={i}>
         <span className="-ml-2!">{i}s</span>
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -105,8 +113,8 @@ export default function Timeline({
     );
   }
 
-  function handleMouseDown(clientX: number) {
-    setActive(true);
+  function handleMouseDown(target: string, clientX: number) {
+    setActive(target);
     handleMouseMove(clientX);
   }
 
@@ -115,36 +123,108 @@ export default function Timeline({
 
     const tickBoundingRect = tickRef.current.getBoundingClientRect();
 
-    const timelineRange = (clientX - tickBoundingRect.x - graphRef.current.scrollLeft) / (graphRef.current.offsetWidth);
-    
+    const timelineRange =
+      (clientX - tickBoundingRect.x - graphRef.current.scrollLeft) /
+      graphRef.current.offsetWidth;
+
+    // Allow scrubbing timeline
+    // TODO: Fix bug where scrubbing stops when you stop moving.
     if (timelineRange > 0.975) {
-        graphRef.current.scrollLeft += graphRef.current.offsetWidth * 0.025;
+      graphRef.current.scrollLeft += graphRef.current.offsetWidth * 0.025;
+    } else if (timelineRange < 0.025) {
+      graphRef.current.scrollLeft -= graphRef.current.offsetWidth * 0.025;
     }
 
-    else if (timelineRange < 0.025) {
-        graphRef.current.scrollLeft -= graphRef.current.offsetWidth * 0.025;
+    const newFrameIndex = Number(
+      parseInt("" + (clientX - tickBoundingRect.x) / 12),
+    );
+
+    switch (active) {
+      case "player":
+        onChangeCurrentFrame(newFrameIndex);
+        break;
+      case "range_start":
+        onChangeFrameRange(Math.max(0, newFrameIndex), frameRange[1]);
+        break;
+      case "range_end":
+        onChangeFrameRange(frameRange[0], newFrameIndex);
+        break;
     }
 
-    console.log(Math.min(Math.max(0, clientX - tickBoundingRect.x), graphRef.current.scrollWidth) / graphRef.current.scrollWidth)
+    console.log(
+      Math.min(
+        Math.max(0, clientX - tickBoundingRect.x),
+        graphRef.current.scrollWidth,
+      ) / graphRef.current.scrollWidth,
+    );
   }
 
   function syncTimeline(e: React.DragEvent<HTMLDivElement>) {
     if (!playerRef.current || !graphRef.current || !layersRef.current) return;
 
     if (e.target == graphRef.current) {
-        layersRef.current.scrollTop = graphRef.current.scrollTop;
+      layersRef.current.scrollTop = graphRef.current.scrollTop;
     }
-    
+
     if (e.target == layersRef.current) {
-        graphRef.current.scrollTop = layersRef.current.scrollTop;
+      graphRef.current.scrollTop = layersRef.current.scrollTop;
     }
 
     playerRef.current.style.top = `${graphRef.current.scrollTop}px`;
   }
 
   function handleMouseUp() {
-    setActive(false);
+    setActive("");
   }
+
+  function handleContextMenu(e) {
+    e.preventDefault();
+  }
+
+  useEffect(() => {
+    function handleFrameUpdate(e: CustomEvent) {
+      const currentFrameIndex = e.detail;
+
+      if (playerRef.current) {
+        playerRef.current.style.left = `${currentFrameIndex * 12}px`;
+      }
+    }
+
+    window.addEventListener(
+      "anim-frame-update",
+      handleFrameUpdate as EventListener,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "anim-frame-update",
+        handleFrameUpdate as EventListener,
+      );
+    };
+  }, []);
+
+  const menuModel = [
+    {
+      label: "New keyframe",
+      action: () => console.log("New keyframe"),
+    },
+    {
+      label: "Delete keyframe",
+      action: () => console.log("Delete keyframe"),
+    },
+  ];
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLElement>) => {
+    if (e.key === "ArrowDown") {
+      onLayerDown(currentLayer);
+      
+    }
+
+    if (e.key === "ArrowUp") {
+      onLayerUp(currentLayer);
+    }
+    
+  }, [currentLayer, onLayerDown, onLayerUp]);
 
   return (
     <div
@@ -162,11 +242,7 @@ export default function Timeline({
         </button>
 
         <button className="btn btn--primary" onClick={() => onToggleLoop()}>
-          {isLooping ? (
-            <IconRepeatOff size={12} />
-          ) : (
-            <IconRepeat size={12} />
-          )}
+          {isLooping ? <IconRepeatOff size={12} /> : <IconRepeat size={12} />}
         </button>
       </div>
 
@@ -174,19 +250,21 @@ export default function Timeline({
         <div className="flex flex-col border-r border-[color:var(--border-light)] h-[25vh] z-1 shadow-[2px_2px_2px_var(--border-light)]">
           <div className="px-4! py-3! b-2 border-b border-[color:var(--border-light)] flex justify-between">
             Timeline
-
             <div className="flex gap-2">
-                <button className="btn btn--primary">
-                    <IconFileImport size={12} />
-                </button>
-                <button className="btn btn--primary" onClick={onAddLayer}>
-                    <IconPlus size={12} />
-                </button>
+              <button className="btn btn--primary">
+                <IconFileImport size={12} />
+              </button>
+              <button className="btn btn--primary" onClick={onAddLayer}>
+                <IconPlus size={12} />
+              </button>
             </div>
           </div>
 
-          <div className="flex-1 overflow-scroll no-scrollbar h-[15vh]" ref={layersRef} onScroll={syncTimeline}>
-            {/* {JSON.stringify(layers)} */}
+          <div
+            className="flex-1 overflow-scroll no-scrollbar h-[15vh]"
+            ref={layersRef}
+            onScroll={syncTimeline}
+          >
             {layers.map((layer: Layer, index: number) => (
               <div
                 key={index}
@@ -195,8 +273,13 @@ export default function Timeline({
                 onDrag={(e) => console.log(e)}
                 onDragEnd={(e) => console.log(e)}
                 className="flex items-center cursor-grab pl-0! px-4! py-1! border-b border-[color:var(--border-light)] last:border-b-0"
-                style={{backgroundColor: index === currentLayer ? "var(--primary-active)" : ""}}
-                 onClick={() => onActiveLayer(index)}
+                style={{
+                  backgroundColor:
+                    index === currentLayer ? "var(--primary-active)" : "",
+                }}
+                onClick={() => onActiveLayer(index)}
+                onKeyDown={(e) => handleKeyDown(e)}
+                tabIndex={0}
               >
                 <IconSelector size={14} color="grey" />
                 <IconLayersSubtract size={14} className="mr-1" />
@@ -242,42 +325,60 @@ export default function Timeline({
           onScroll={(e) => syncTimeline(e)}
           ref={graphRef}
         >
-          <div onMouseDown={(e) => handleMouseDown(e.clientX)} ref={tickRef} className="flex" style={{paddingTop: 12, position: "sticky", top: 0, backgroundColor: "var(--bg-surface)"}}>
+          <div
+            onMouseDown={(e) => handleMouseDown("player", e.clientX)}
+            ref={tickRef}
+            className="flex"
+            style={{
+              paddingTop: 12,
+              position: "sticky",
+              top: 0,
+              backgroundColor: "var(--bg-surface)",
+            }}
+          >
             {ticks}
-          </div>       
+          </div>
 
-          <div className="range">
-            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 11 11" fill="none">
+          <div className="range" onMouseDown={(e) => handleMouseDown("range_start", e.clientX)} style={{ left: `${frameRange[0] * 12 + 12}px` }}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="11"
+              height="11"
+              viewBox="0 0 11 11"
+              fill="none"
+            >
               <g clipPath="url(#clip0_182_2)">
-                <path d="M11 0H0V11L11 0Z" fill="currentColor"/>
+                <path d="M11 0H0V11L11 0Z" fill="currentColor" />
               </g>
               <defs>
                 <clipPath id="clip0_182_2">
-                  <rect width="11" height="11" fill="white"/>
+                  <rect width="11" height="11" fill="white" />
                 </clipPath>
               </defs>
             </svg>
           </div>
 
-          <div className="range" style={{left: `${frameRange[1] * 12}px`}}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 11 11" fill="none">
+          <div className="range" onMouseDown={(e) => handleMouseDown("range_end", e.clientX)} style={{ left: `${frameRange[1] * 12}px` }}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="11"
+              height="11"
+              viewBox="0 0 11 11"
+              fill="none"
+            >
               <g clipPath="url(#clip0_182_5)">
-                <path d="M11 0H0L11 11V0Z" fill="currentColor"/>
+                <path d="M11 0H0L11 11V0Z" fill="currentColor" />
               </g>
               <defs>
                 <clipPath id="clip0_182_5">
-                  <rect width="11" height="11" fill="white"/>
+                  <rect width="11" height="11" fill="white" />
                 </clipPath>
-              </defs> 
+              </defs>
             </svg>
           </div>
 
-          <div
-            ref={playerRef}
-            className="player"
-            style={{ left: `${currentFrame * 12}px` }}
-          >
-            <div className="player__head">
+          <div ref={playerRef}  className="player" style={{left: 0}}>
+            <div className="player__head" onMouseDown={(e) => handleMouseDown("player", e.clientX)}>
               <svg
                 width="11"
                 height="16"
@@ -293,11 +394,26 @@ export default function Timeline({
             <div className="player__body" />
           </div>
 
+          <Menu items={menuModel} />
+
           <div className="flex flex-col gap-[1px]">
-            {layers.map((layer: Layer, index: number) => <div key={index}>
-              <div className="bg-neutral-600 text-white rounded overflow-hidden" style={{width:11, height: 30}}></div>
-                    {/* {layer.frames.map((frame: Frame, index: number) => <div key={index} className="bg-neutral-600 text-white rounded overflow-hidden" style={{width:11, height: 30}}></div>)} */}
-                </div>)}
+            {layers.map((layer, layerIndex: number) => (
+              <div key={layerIndex} className="flex relative">
+                {layer.frames.map((frameIndex, index) => (
+                  <div
+                    key={index}
+                    className="absolute bg-[var(--border-light)] text-white overflow-hidden"
+                    onContextMenu={handleContextMenu}
+                    style={{
+                      width: 11,
+                      height: 30,
+                      left: `${frameIndex * 12}px`,
+                      top: `${layerIndex * 30}px`
+                    }}
+                  ></div>
+                ))}
+              </div>
+            ))}
           </div>
         </div>
       </div>

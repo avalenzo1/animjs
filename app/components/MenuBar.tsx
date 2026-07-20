@@ -7,6 +7,7 @@ function MenuBar({ items }: any) {
         <ul className="menubar">      
         {
             items.map((item: any, index: any) => {
+                
                 return <li key={index} className="menubar__item"><button className="menu__btn">{item.icon} {item.label}</button><Menu items={item.items} /></li>;
             })
         }

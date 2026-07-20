@@ -41,7 +41,12 @@
     --primary: #ededed;
     --primary-hover: #f0f0f0;
     --primary-active: #dcdcdc;
-    --border-light: rgba(0, 0, 0, 0.15);
+
+    --danger: #ffdcdc;
+    --danger-hover: #ffa5a5;
+    --danger-active: #ff8585;
+
+    --border-light: #d1d1d1;
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
@@ -116,7 +121,7 @@ canvas {
    ========================================= */
 #app {
     display: grid;
-    grid-template-columns: 0.4fr 2.2fr 0.4fr;
+    grid-template-columns: auto 2.2fr auto;
     grid-template-rows: auto 4fr auto;
     grid-template-areas:
         "menubar menubar menubar"
@@ -263,14 +268,10 @@ canvas {
 /* Buttons */
 .btn-group {
     display: grid;
-
     gap: var(--space-2);
-
-    @apply md:grid-rows-2 md:grid-cols-2;
-
 }
 
-.btn-group__btn-check input {
+.btn-group__btn-check input[type=radio] {
     display: none;
 }
 
@@ -296,6 +297,7 @@ canvas {
     flex-direction: row;
     align-items: center;
     justify-content: center;
+    overflow: overlay;
 }
 
 .btn--primary {
@@ -305,6 +307,15 @@ canvas {
 
 .btn--primary:hover {
     background-color: var(--primary-hover);
+}
+
+.btn--danger {
+    background-color: var(--danger);
+    color: var(--text-inverse);
+}
+
+.btn--danger:hover {
+    background-color: var(--danger-hover);
 }
 
 .btn--xs {
@@ -389,13 +400,18 @@ canvas {
     color: var(--border-light);
 }
 
+.range:hover {
+    color: var(--primary-hover);
+}
+
 .player {
     display: flex;
     position: absolute;
     height: 100%;
     top: 0;
     transform: translate(-1px, 0px);
-    color: #7b00ff;
+    color: #ff0000;
+    z-index: 99;
 }
 
 .player__head {
@@ -422,4 +438,13 @@ Retrieved 2026-05-29, License - CC BY-SA 4.0
 }
 .no-scrollbar::-webkit-scrollbar { 
     display: none;  /* Older Safari and Chromium */
+}
+
+.popover {
+    @apply flex gap-2 bg-white p-2 absolute rounded;
+    transform: translateX(calc(-100% - 17.3px));
+}
+
+.popover::after {
+    @apply content-[""] right-[-17.3px] top-0 absolute inline-block w-0 h-0 border-solid border-t-[10px] border-r-0 border-l-[17.3px] border-b-[10px] border-l-white border-r-transparent border-t-transparent border-b-transparent;
 }

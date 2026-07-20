@@ -104,8 +104,24 @@ export abstract class AnimObject {
     }
 }
 
-type Brush = {size: number, stroke: string};
-type Point = {x: number, y: number, pressure: number, break: boolean, deleted?: boolean};
+export type BrushProps = {
+    id: string;
+    size: number;
+    color: string;
+};
+
+export class Brush {
+    id: string;
+    size: number;
+    color: string;
+
+    constructor(data: BrushProps = {}) {
+        this.id = data.id || UUID();
+        this.size = data.size || 5;
+        this.color = data.color || "#000000";
+    }
+};
+export type Point = {x: number, y: number, pressure: number, break: boolean, deleted?: boolean};
 
 export interface AnimStrokeProps extends AnimObjectProps { brush: Brush; points: Point };
 
@@ -126,7 +142,7 @@ export class AnimStroke extends AnimObject {
 
         ctx.lineWidth = this.points[0].pressure * this.brush.size;
         ctx.lineCap = "round";
-        ctx.strokeStyle = this.brush.stroke;
+        ctx.strokeStyle = this.brush.color;
 
         let penDown = false;
 
@@ -318,35 +334,46 @@ export class Layer {
     frames: Frame[];
     locked: boolean;
     visible: boolean;
+    opacity: number;
 
     [immerable] = true;
 
-    constructor(name: string) {
-        this.name = name || `New Layer`;
-        this.id = UUID();
+    constructor(json: any = {}) {
+        this.name = json.name || `New Layer`;
+        this.id = json.id || UUID();
         this.frames = [];
-        this.frames.push(new Frame(0));
-        this.locked = false;
-        this.visible = true;
+        this.addFrame(new Frame(0));
+        this.locked = json.locked || false;
+        this.visible = json.visible || true;
+        this.opacity = json.opacity || 1;
 
         console.log(`New layer "${this.name}" created`);
     }
 
     static fromJSON(json: any) {
-        const layer = new Layer(json.name);
+        const layer = new Layer(json);
         
-        layer.id = json.id;
+        layer.id = json.id
+        layer.frames = []; // clearing out single frame
 
         for (const frameJSON of json.frames) {
             const frame = Frame.fromJSON(frameJSON);
 
-            layer.frames.push(frame);
+            layer.addFrame(frame);
         }
 
         return layer;
     }
 
     addFrame(frame: Frame) {
+        const overlappingFrame = this.frames.find((fr) => fr.index === frame.index);
+
+        if (overlappingFrame) {
+            console.warn(`Could not add frame: frame at index ${frame.index} already exists.`);
+            console.log("Frame:", frame);
+            return;
+        }
+
         this.frames.push(frame);
         this.frames.sort((a: Frame, b: Frame) => a.index - b.index);
 
@@ -385,11 +412,13 @@ export class Layer {
 }
 
 export type AnimRef = {
+    mode: E_Mode,
     metadata: {width: number, height: number, fps: number},
     history: AnimObject[],
     onion: object,
     camera: Camera,
     isPlaying: boolean,
+    isLooping: boolean,
     isExporting: boolean, 
     isPointerDown: boolean,
     currentFrameIndex: number,
@@ -398,4 +427,9 @@ export type AnimRef = {
     mouse: Vector,
     layers: Layer[],
     activeAnimObject: AnimObject|null
+};
+
+
+export type StageRef = {
+
 };
