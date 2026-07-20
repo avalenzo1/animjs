@@ -1,4 +1,4 @@
-import { produce } from "immer";
+import { Draft, produce } from "immer";
 import { Brush } from "../lib/Anim";
 
 export enum E_BrushAction {
@@ -16,22 +16,26 @@ export interface BrushAction {
 }
 
 // Our reducer function that uses a switch statement to handle our actions
-function brushReducer(draft, action: BrushAction) {
+function brushReducer(draft: Draft<Brush>[], action: BrushAction) {
   const { type, brush, index } = action;
   switch (type) {
     case E_BrushAction.CLEAR_ALL_BRUSHES:
         draft.length = 0;
       break;
     case E_BrushAction.ADD_BRUSH:
+        if (!brush) break;
         draft.push(brush);
         console.log("Add Brush");
         console.log(draft);
       break;
     case E_BrushAction.REMOVE_BRUSH:
+        if (!index) break;
         draft.splice(index, 1);
       break;
     case E_BrushAction.SET_BRUSH:
-        if (index) draft[index] = brush;
+        if (!index || !draft[index] || !brush) break;
+        
+        draft[index] = brush;
       break;
     default:
       console.warn("Invalid brush action: " + action.type);

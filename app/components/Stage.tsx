@@ -1,7 +1,6 @@
 import {
   memo,
   forwardRef,
-  PropsWithChildren,
   RefObject,
   useCallback,
   useEffect,
@@ -12,7 +11,6 @@ import {
 } from "react";
 import {
   Frame,
-  AnimObject,
   AnimStroke,
   E_Mode,
   Rectangle,
@@ -22,6 +20,8 @@ import {
   AnimRef,
   Camera,
   Layer,
+  AnimImageProps,
+  AnimStrokeProps,
 } from "../lib/Anim";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile, toBlobURL } from "@ffmpeg/util";
@@ -38,7 +38,7 @@ type StageProps = {
 // Posted by user236139, modified by community. See post 'Timeline' for change history
 // Retrieved 2026-07-19, License - CC BY-SA 3.0
 
-function array_move(arr: Array<any>, old_index: number, new_index: number) {
+function array_move(arr: Array<unknown>, old_index: number, new_index: number) {
     if (new_index >= arr.length) {
         let k = new_index - arr.length + 1;
         while (k--) {
@@ -189,7 +189,7 @@ const Stage = memo(
         (ctx: CanvasRenderingContext2D | null, isViewport: boolean = false) => {
           if (!ctx || !animRef.current) return;
 
-          const { camera, isPlaying, layers } = animRef.current;
+          const { isPlaying, layers } = animRef.current;
 
           ctx.save();
           ctx.fillStyle = "#ffffff";
@@ -281,11 +281,11 @@ const Stage = memo(
           });
         }
 
-        async function fakeLoader(ms) {
-          return new Promise((resolve, reject) => {
-            setTimeout(resolve, ms);
-          });
-        }
+        // async function fakeLoader(ms: number) {
+        //   return new Promise((resolve) => {
+        //     setTimeout(resolve, ms);
+        //   });
+        // }
 
         async function onLoad() {
           setWindowSize([window.innerWidth, window.innerHeight]);
@@ -371,6 +371,7 @@ const Stage = memo(
           if (
             !stageCtxRef.current ||
             !stageCanvasRef.current ||
+            !viewportCanvasRef.current ||
             !animRef.current
           )
             return;
@@ -567,7 +568,7 @@ const Stage = memo(
             const drawImage = new AnimImage({
               pos: new Vector(mouseRef.current.x, mouseRef.current.y),
               imageAsset,
-            });
+            } as AnimImageProps);
             frame?.animObjects.push(drawImage);
           } catch (error) {
             console.error("Could not add Image...", error);
@@ -603,7 +604,7 @@ const Stage = memo(
         e.preventDefault();
       }
 
-      function handlePointerDown(e: React.MouseEvent<HTMLCanvasElement>) {
+      function handlePointerDown(e: React.PointerEvent<HTMLCanvasElement>) {
         handleMouseMove(e);
 
         if (!animRef.current) return;
@@ -632,10 +633,10 @@ const Stage = memo(
               onFrameUpdate();
             }
 
-            let newAnimObject = new AnimStroke({
+            const newAnimObject = new AnimStroke({
               brush: animRef.current.brush,
-            });
-            let point = { x, y, pressure: (e as any).pressure || 1 };
+            } as AnimStrokeProps);
+            const point = { x, y, pressure: e.pressure || 1 };
 
             newAnimObject.points = [point];
             frame.animObjects.push(newAnimObject);
@@ -663,7 +664,7 @@ const Stage = memo(
         }
       }
 
-      function handlePointerMove(e: React.MouseEvent<HTMLCanvasElement>) {
+      function handlePointerMove(e: React.PointerEvent<HTMLCanvasElement>) {
         handleMouseMove(e);
 
         if (!animRef.current || !stageCanvasRef.current) return;
@@ -696,7 +697,7 @@ const Stage = memo(
               x,
               y,
               pressure:
-                (e as any).pointerType === "pen" ? (e as any).pressure : 1,
+                e.pointerType === "pen" ? e.pressure : 1,
             };
             activeAnimObject.points.push(point);
             break;
@@ -745,37 +746,37 @@ const Stage = memo(
         }
       }
 
-      const transcode = async () => {
-        const ffmpeg = ffmpegRef.current;
-        // u can use 'https://ffmpegwasm.netlify.app/video/video-15s.avi' to download the video to public folder for testing
+      // const transcode = async () => {
+      //   const ffmpeg = ffmpegRef.current;
+      //   // u can use 'https://ffmpegwasm.netlify.app/video/video-15s.avi' to download the video to public folder for testing
 
-        if (ffmpeg === null) {
-          console.error("Could not transcode. ffmpeg is null");
-          return;
-        }
+      //   if (ffmpeg === null) {
+      //     console.error("Could not transcode. ffmpeg is null");
+      //     return;
+      //   }
 
-        await ffmpeg.writeFile(
-          "input.avi",
-          await fetchFile(
-            "https://raw.githubusercontent.com/ffmpegwasm/testdata/master/video-15s.avi",
-          ),
-        );
-        await ffmpeg.exec(["-i", "input.avi", "output.mp4"]);
-        const data = (await ffmpeg.readFile("output.mp4")) as any;
-        // if (videoRef.current)
-        // videoRef.current.src = URL.createObjectURL(
-        //     new Blob([data.buffer], { type: "video/mp4" })
-        // );
+      //   await ffmpeg.writeFile(
+      //     "input.avi",
+      //     await fetchFile(
+      //       "https://raw.githubusercontent.com/ffmpegwasm/testdata/master/video-15s.avi",
+      //     ),
+      //   );
+      //   await ffmpeg.exec(["-i", "input.avi", "output.mp4"]);
+      //   const data = (await ffmpeg.readFile("output.mp4")) as any;
+      //   // if (videoRef.current)
+      //   // videoRef.current.src = URL.createObjectURL(
+      //   //     new Blob([data.buffer], { type: "video/mp4" })
+      //   // );
 
-        const blob = new Blob([data.buffer], { type: "video/mp4" });
-        const url = URL.createObjectURL(blob);
+      //   const blob = new Blob([data.buffer], { type: "video/mp4" });
+      //   const url = URL.createObjectURL(blob);
 
-        // Create a link to download the video
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "recording.mp4";
-        a.click();
-      };
+      //   // Create a link to download the video
+      //   const a = document.createElement("a");
+      //   a.href = url;
+      //   a.download = "recording.mp4";
+      //   a.click();
+      // };
 
       useImperativeHandle(ref, () => ({
         getLayerById(id: string) {
@@ -880,12 +881,16 @@ const Stage = memo(
             // undo
 
             const frame = getCurrentFrame();
-            const popped = frame?.animObjects.pop();
 
-            // console.log(frame.items);
+            if (!frame) {
+              return;
+            }
+
+            const popped = frame.animObjects.pop();
 
             if (popped) {
               animRef.current.history.push({
+                type: "delete_frame",
                 frame: frame,
                 animObject: popped,
               });
@@ -922,7 +927,7 @@ const Stage = memo(
 
             const layer = layers[i];
 
-            const frameIndices = [];
+            const frameIndices: number[] = [];
 
             layer.frames.forEach((frame) => {
               frameIndices.push(frame.index);
@@ -957,3 +962,25 @@ const Stage = memo(
 Stage.displayName = "Stage";
 
 export default Stage;
+
+export type StageRef = {
+    getLayerById: (id: string) => Layer | undefined;
+
+  moveLayerDown: (layerIndex: number) => void;
+  moveLayerUp: (layerIndex: number) => void;
+
+  exportVideo: () => void;
+
+  player: {
+    setCurrentFrame: (frame: number) => void;
+    prevFrame: () => void;
+    nextFrame: () => void;
+  };
+
+  history: {
+    undo: () => void;
+    redo: () => void;
+  };
+
+  getTimeline: () => number[][] | undefined;
+};

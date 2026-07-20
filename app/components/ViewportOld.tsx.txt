@@ -7,7 +7,7 @@ import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile, toBlobURL } from "@ffmpeg/util";
 import { transcode } from "buffer";
 
-type ViewportProp = { onLoaded: Function };
+type ViewportProp = { onLoaded: void };
 type AnimState = {
     metadata: object,
     history: AnimObject[],

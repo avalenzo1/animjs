@@ -115,15 +115,19 @@ export class Brush {
     size: number;
     color: string;
 
-    constructor(data: BrushProps = {}) {
-        this.id = data.id || UUID();
-        this.size = data.size || 5;
-        this.color = data.color || "#000000";
+    constructor(data: BrushProps = {
+        id: UUID(),
+        size: 5,
+        color: "#000000"
+    }) {
+        this.id = data.id;
+        this.size = data.size;
+        this.color = data.color;
     }
 };
-export type Point = {x: number, y: number, pressure: number, break: boolean, deleted?: boolean};
+export type Point = {x: number, y: number, pressure: number, break?: boolean, deleted?: boolean};
 
-export interface AnimStrokeProps extends AnimObjectProps { brush: Brush; points: Point };
+export interface AnimStrokeProps extends AnimObjectProps { brush: Brush; points: Point[] };
 
 export class AnimStroke extends AnimObject {    
     brush: Brush;
@@ -242,7 +246,7 @@ export class ImageAsset extends Asset {
         this.image.src = this.base64;
     }
 
-    static async fromImageURL(url: string) {
+    static async fromImageURL(url: string): Promise<ImageAsset> {
         return new Promise((resolve, reject) => {
         const image = new Image();
         image.src = url;
@@ -321,7 +325,8 @@ export class Frame {
         for (const animObjectJSON of json.animObjects) {
             const animObject = AnimObject.fromJSON(animObjectJSON);
 
-            frame.animObjects.push(animObject);
+            if (animObject instanceof AnimObject)
+                frame.animObjects.push(animObject);
         }
 
         return frame;
@@ -411,11 +416,15 @@ export class Layer {
     }
 }
 
+type AnimEvent = {type: string, frame: Frame, animObject: AnimObject};
+
 export type AnimRef = {
+    brush: Brush,
+    brushes: Brush[],
     mode: E_Mode,
     metadata: {width: number, height: number, fps: number},
-    history: AnimObject[],
-    onion: object,
+    history: AnimEvent[],
+    onion: {enabled: boolean, layers: number},
     camera: Camera,
     isPlaying: boolean,
     isLooping: boolean,
@@ -427,9 +436,4 @@ export type AnimRef = {
     mouse: Vector,
     layers: Layer[],
     activeAnimObject: AnimObject|null
-};
-
-
-export type StageRef = {
-
 };

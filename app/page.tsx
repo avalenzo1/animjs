@@ -1,7 +1,7 @@
 "use client";
 
 import MenuBar from "./components/MenuBar";
-import Stage from "./components/Stage";
+import Stage, { StageRef } from "./components/Stage";
 import Image from "next/image";
 import { ThemeContext } from "./ThemeContext";
 import {
@@ -12,7 +12,7 @@ import {
   useRef,
   useState,
 } from "react";
-import Toolbar from "./components/Toolbar";
+import Toolbar, { Tool } from "./components/Toolbar";
 import ProgressBar from "./components/ProgressBar";
 import {
   IconHandStop,
@@ -28,7 +28,6 @@ import {
   Camera,
   E_Mode,
   Layer,
-  StageRef,
   UUID,
   Vector,
 } from "./lib/Anim";
@@ -85,7 +84,7 @@ export default function Home() {
   const [mode, setMode] = useState(E_Mode.BRUSH);
   const [currentLayer, setCurrentLayer] = useState(0);
   const [frameRange, setFrameRange] = useState([0, 23]);
-  const [cachedFileHandle, setCachedFileHandle] = useState(null);
+  const [cachedFileHandle, setCachedFileHandle] = useState<FileSystemFileHandle|null>(null);
   const [metadata, setMetadata] = useState({
     width: 1920,
     height: 1080,
@@ -98,6 +97,7 @@ export default function Home() {
   // If animRef is null, initialize it.
   if (animRef.current == null) {
     animRef.current = {
+    
       metadata: {
         width: 1920,
         height: 1080,
@@ -108,11 +108,13 @@ export default function Home() {
         enabled: true,
         layers: 5,
       },
-      brush: null,
+      brushes: [],
+      brush: new Brush(),
       mode: E_Mode.BRUSH,
       camera: new Camera(),
       isPlaying: false,
       isExporting: false,
+      isLooping: false,
       currentFrameIndex: 0,
       currentLayerIndex: 0,
       frameRange: [0, 23],
@@ -128,6 +130,8 @@ export default function Home() {
 
     const timeline = stageRef.current.getTimeline();
 
+    if (!timeline) return;
+
     for (let i = 0; i < timeline.length; ++i) {
       const frames = timeline[i];
 
@@ -140,6 +144,8 @@ export default function Home() {
 
     const layer = stageRef.current.getLayerById(id);
 
+    if (!layer) return;
+
     layer.name = name;
 
     layerDispatch({ id, name, type: "change_layer_name" });
@@ -149,6 +155,8 @@ export default function Home() {
     if (!stageRef.current) return;
 
     const layer = stageRef.current.getLayerById(id);
+
+    if (!layer) return;
 
     layer.locked = !layer.locked;
 
@@ -160,12 +168,16 @@ export default function Home() {
 
     const layer = stageRef.current.getLayerById(id);
 
+    if (!layer) return;
+
     layer.visible = !layer.visible;
 
     layerDispatch({ id, type: "toggle_layer_visible" });
   }, []);
 
   const addLayer = useCallback(() => {
+    if (!animRef.current) return;
+
     const newLayer = new Layer("New Layer");
 
     animRef.current.layers.push(newLayer);
@@ -218,7 +230,7 @@ export default function Home() {
       const blob = new Blob([animJSON], { type: "text/plain" });
       const fileName = "AnimProject.anim";
 
-      if (window.showSaveFilePicker) {
+      if (typeof window.showSaveFilePicker === "function") {
         try {
           let fileHandle: FileSystemFileHandle | undefined;
 
@@ -228,6 +240,11 @@ export default function Home() {
           } else {
             console.log("test");
             fileHandle = await createSaveFilePicker(fileName);
+
+            if (!fileHandle) {
+              return;
+            }
+            
             setCachedFileHandle(fileHandle);
           }
 
@@ -272,7 +289,7 @@ export default function Home() {
     const json = JSON.parse(await file.text());
 
     layerDispatch({ type: "clear_all_layers" });
-    brushDispatch({ type: "clear_all_brushes" });
+    brushDispatch({ type: E_BrushAction.CLEAR_ALL_BRUSHES });
 
     // console.log(json);
 
@@ -377,7 +394,7 @@ export default function Home() {
 
         console.log("Exporting...");
 
-        stageRef.current.exportVideo();
+        if (stageRef.current) stageRef.current.exportVideo();
 
         return;
       }
@@ -476,12 +493,12 @@ export default function Home() {
         "hr",
         {
           label: "Export",
-          action: () => stageRef.current.exportVideo(),
+          action: () => { if (stageRef.current) stageRef.current.exportVideo() },
         },
       ],
     },
   ];
-  const toolsModel = [
+  const toolsModel: Tool[] = [
     {
       label: "Hand",
       icon: <IconHandStop size={14} />,
@@ -519,7 +536,7 @@ export default function Home() {
   }, []);
 
   const changeCurrentFrame = useCallback((nextFrame: number) => {
-    stageRef.current.player.setCurrentFrame(nextFrame);
+    if (stageRef.current) stageRef.current.player.setCurrentFrame(nextFrame);
   }, []);
 
   const setActiveLayer = useCallback(
@@ -543,6 +560,7 @@ export default function Home() {
 
   const moveLayerDown = useCallback(
     (layerIndex: number) => {
+      if (!stageRef.current) return;
       layerDispatch({ type: "move_layer_down", layerIndex });
       setActiveLayer(Math.min(layerIndex + 1, layers.length - 1));
 
@@ -553,6 +571,7 @@ export default function Home() {
 
   const moveLayerUp = useCallback(
     (layerIndex: number) => {
+      if (!stageRef.current) return;
       layerDispatch({ type: "move_layer_up", layerIndex });
       setActiveLayer(Math.max(layerIndex - 1, 0));
       stageRef.current.moveLayerUp(layerIndex);

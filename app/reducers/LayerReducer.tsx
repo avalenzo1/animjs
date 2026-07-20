@@ -1,24 +1,56 @@
-import { produce } from "immer";
-import { Layer } from "../lib/Anim";
+import { produce, Draft } from "immer";
 
-const layerReducer = (draft, action) => {
-  let layer: Layer, nextLayerIndex: number;
+type LayerAction =
+  | { type: "clear_all_layers" }
+  | { type: "toggle_layer_visible"; id: string }
+  | { type: "toggle_layer_lock"; id: string }
+  | { type: "change_layer_name"; id: string; name: string }
+  | { type: "add_layer"; id: string; name: string }
+  | { type: "move_layer_down"; layerIndex: number }
+  | { type: "move_layer_up"; layerIndex: number }
+  | { type: "frame_update"; layerIndex: number; frames: number[] };
+
+export type ReducedLayer = {
+  id: string;
+  name: string;
+  visible: boolean;
+  locked: boolean;
+  frames: number[];
+}; 
+  
+const layerReducer = (
+  draft: Draft<ReducedLayer[]>,
+  action: LayerAction
+): void => {
+  let layer: Draft<ReducedLayer> | undefined;
+  let nextLayerIndex: number;
+
   switch (action.type) {
     case "clear_all_layers":
       draft.length = 0;
       break;
+
     case "toggle_layer_visible":
-      layer = draft.find((layer: Layer) => layer.id === action.id);
-      layer.visible = !layer.visible;
+      layer = draft.find((layer) => layer.id === action.id);
+      if (layer) {
+        layer.visible = !layer.visible;
+      }
       break;
+
     case "toggle_layer_lock":
-      layer = draft.find((layer: Layer) => layer.id === action.id);
-      layer.locked = !layer.locked;
+      layer = draft.find((layer) => layer.id === action.id);
+      if (layer) {
+        layer.locked = !layer.locked;
+      }
       break;
+
     case "change_layer_name":
-      layer = draft.find((layer: Layer) => layer.id === action.id);
-      layer.name = action.name;
+      layer = draft.find((layer) => layer.id === action.id);
+      if (layer) {
+        layer.name = action.name;
+      }
       break;
+
     case "add_layer":
       draft.push({
         id: action.id,
@@ -28,6 +60,7 @@ const layerReducer = (draft, action) => {
         frames: [],
       });
       break;
+
     case "move_layer_down":
       nextLayerIndex = action.layerIndex + 1;
 
@@ -37,8 +70,8 @@ const layerReducer = (draft, action) => {
           draft[action.layerIndex],
         ];
       }
-
       break;
+
     case "move_layer_up":
       nextLayerIndex = action.layerIndex - 1;
 
@@ -48,13 +81,10 @@ const layerReducer = (draft, action) => {
           draft[action.layerIndex],
         ];
       }
+      break;
 
-      break;
     case "frame_update":
-      layer = draft[action.layerIndex];
-      layer.frames = action.frames;
-      break;
-    default:
+      draft[action.layerIndex].frames = action.frames;
       break;
   }
 };

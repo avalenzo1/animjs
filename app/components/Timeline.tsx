@@ -14,14 +14,15 @@ import {
   IconRepeat,
   IconRepeatOff,
 } from "@tabler/icons-react";
-import { Frame, Layer } from "../lib/Anim";
+import { Layer } from "../lib/Anim";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Menu from "./Menu";
+import { ReducedLayer } from "../reducers/LayerReducer";
 
 type TimelineProps = {
   currentLayer: number;
   frameRange: number[];
-  layers: Layer[];
+  layers: ReducedLayer[];
   playing: boolean;
   isLooping: boolean;
   onToggleLoop: () => void;
@@ -60,7 +61,6 @@ export default function Timeline({
   const graphRef = useRef<HTMLDivElement | null>(null);
   const playerRef = useRef<HTMLDivElement | null>(null);
 
-  const [posX, setPosX] = useState(0);
   const [active, setActive] = useState("");
   const ticks = [];
   const time = 25;
@@ -159,7 +159,7 @@ export default function Timeline({
     );
   }
 
-  function syncTimeline(e: React.DragEvent<HTMLDivElement>) {
+  function syncTimeline(e: React.UIEvent<HTMLDivElement>) {
     if (!playerRef.current || !graphRef.current || !layersRef.current) return;
 
     if (e.target == graphRef.current) {
@@ -177,7 +177,7 @@ export default function Timeline({
     setActive("");
   }
 
-  function handleContextMenu(e) {
+  function handleContextMenu(e: React.MouseEvent) {
     e.preventDefault();
   }
 
@@ -265,7 +265,7 @@ export default function Timeline({
             ref={layersRef}
             onScroll={syncTimeline}
           >
-            {layers.map((layer: Layer, index: number) => (
+            {layers.map((layer: ReducedLayer, index: number) => (
               <div
                 key={index}
                 draggable={true}
@@ -407,7 +407,7 @@ export default function Timeline({
                     style={{
                       width: 11,
                       height: 30,
-                      left: `${frameIndex * 12}px`,
+                      left: `${Number(frameIndex) * 12}px`,
                       top: `${layerIndex * 30}px`
                     }}
                   ></div>
