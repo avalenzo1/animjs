@@ -92,7 +92,7 @@ export abstract class AnimObject {
         ctx.strokeStyle = "red";
     }
 
-    static fromJSON(json: JSON): AnimObject | null {
+    static fromJSON(json: any): AnimObject | null {
         switch (json.type) {
             case "stroke":
                 return new AnimStroke(json);
