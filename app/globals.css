@@ -441,10 +441,17 @@ Retrieved 2026-05-29, License - CC BY-SA 4.0
 }
 
 .popover {
-    @apply flex gap-2 bg-white p-2 absolute rounded;
+    @apply flex gap-2 bg-[var(--bg-surface)] p-2 rounded z-99 hidden;
     transform: translateX(calc(-100% - 17.3px));
+    filter: drop-shadow(0px 2px 1px var(--border-light));
+    border-top-right-radius: 0;
+}
+
+.popover--show {
+    @apply fixed block;
 }
 
 .popover::after {
-    @apply content-[""] right-[-17.3px] top-0 absolute inline-block w-0 h-0 border-solid border-t-[10px] border-r-0 border-l-[17.3px] border-b-[10px] border-l-white border-r-transparent border-t-transparent border-b-transparent;
+    @apply content-[""] right-[-16.5px] top-0 absolute inline-block w-0 h-0 border-solid border-t-[10px] border-r-0 border-l-[17.3px] border-b-[10px] border-l-[var(--bg-surface)] border-r-transparent border-t-transparent border-b-transparent;
+    filter: drop-shadow(2px 2px 1px var(--border-light));
 }

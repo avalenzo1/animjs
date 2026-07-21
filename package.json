@@ -16,6 +16,7 @@
     "immer": "^11.1.8",
     "next": "16.2.6",
     "react": "19.2.4",
+    "react-contexify": "^6.0.0",
     "react-dom": "19.2.4",
     "react-icons": "^5.7.0"
   },

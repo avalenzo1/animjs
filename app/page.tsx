@@ -123,6 +123,9 @@ export default function Home() {
       activeAnimObject: null,
       isPointerDown: false,
     };
+
+    brushDispatch({ type: E_BrushAction.CLEAR_ALL_BRUSHES });
+    brushDispatch({ type: E_BrushAction.ADD_BRUSH, brush: new Brush() });
   }
 
   const updateTimeline = useCallback(() => {

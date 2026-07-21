@@ -92,7 +92,7 @@ export abstract class AnimObject {
         ctx.strokeStyle = "red";
     }
 
-    static fromJSON(json: any): AnimObject | null {
+    static fromJSON(json: JSON): AnimObject | null {
         switch (json.type) {
             case "stroke":
                 return new AnimStroke(json);
@@ -108,21 +108,25 @@ export type BrushProps = {
     id: string;
     size: number;
     color: string;
+    lineCap: string;
 };
 
 export class Brush {
     id: string;
     size: number;
     color: string;
+    lineCap: string;
 
     constructor(data: BrushProps = {
         id: UUID(),
         size: 5,
-        color: "#000000"
+        color: "#000000",
+        lineCap: "round"
     }) {
         this.id = data.id;
         this.size = data.size;
         this.color = data.color;
+        this.lineCap = data.lineCap;
     }
 };
 export type Point = {x: number, y: number, pressure: number, break?: boolean, deleted?: boolean};
@@ -145,7 +149,8 @@ export class AnimStroke extends AnimObject {
         if (this.points.length === 0) return;
 
         ctx.lineWidth = this.points[0].pressure * this.brush.size;
-        ctx.lineCap = "round";
+        ctx.lineCap = this.brush.lineCap as CanvasLineCap;
+        ctx.lineJoin = this.brush.lineCap as CanvasLineJoin;
         ctx.strokeStyle = this.brush.color;
 
         let penDown = false;
