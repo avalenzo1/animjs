@@ -429,6 +429,8 @@ const Stage = memo(
             0,
             2 * Math.PI,
           );
+          stageCtx.lineCap = brush.lineCap as CanvasLineCap;
+          stageCtx.lineJoin = brush.lineCap as CanvasLineJoin;
           stageCtx.fillStyle = brush.color;
           stageCtx.fill();
 
