@@ -28,7 +28,7 @@ export default function Brushes({
       dispatch({ type: E_BrushAction.SET_BRUSH, index, brush: newBrush });
       setBrush(newBrush);
     },
-    [dispatch, setBrush],
+    [activeBrush.id, brushes, dispatch, setBrush],
   );
 
   const changeBrushSize = useCallback(
@@ -39,7 +39,7 @@ export default function Brushes({
       dispatch({ type: E_BrushAction.SET_BRUSH, index, brush: newBrush });
       setBrush(newBrush);
     },
-    [dispatch, setBrush],
+    [activeBrush.id, brushes, dispatch, setBrush],
   );
 
   const changeBrushLineCap = useCallback(
@@ -50,13 +50,13 @@ export default function Brushes({
       dispatch({ type: E_BrushAction.SET_BRUSH, index, brush: newBrush });
       setBrush(newBrush);
     },
-    [dispatch, setBrush],
+    [activeBrush.id, brushes, dispatch, setBrush],
   );
 
   const removeBrush = useCallback(() => {
     const index = brushes.findIndex((brush) => brush.id === activeBrush.id);
     dispatch({ type: E_BrushAction.REMOVE_BRUSH, index });
-  }, [dispatch]);
+  }, [activeBrush.id, brushes, dispatch]);
 
   const handleContextMenu = useCallback((e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
@@ -72,6 +72,7 @@ export default function Brushes({
           key={index}
           className="btn-group__btn-check"
           onContextMenu={(e) => handleContextMenu(e)}
+          onDoubleClick={(e) => handleContextMenu(e)}
         >
           <input
             type="radio"
@@ -98,7 +99,6 @@ export default function Brushes({
           </button>
           <div>
             <input
-              className="h-full"
               value={activeBrush.color}
               onChange={(e) => changeBrushColor(activeBrush, e.target.value)}
               type="color"

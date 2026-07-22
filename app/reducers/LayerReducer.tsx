@@ -5,7 +5,7 @@ type LayerAction =
   | { type: "toggle_layer_visible"; id: string }
   | { type: "toggle_layer_lock"; id: string }
   | { type: "change_layer_name"; id: string; name: string }
-  | { type: "add_layer"; id: string; name: string }
+  | { type: "add_layer"; id: string; name: string, locked?: boolean, visible?: boolean }
   | { type: "move_layer_down"; layerIndex: number }
   | { type: "move_layer_up"; layerIndex: number }
   | { type: "frame_update"; layerIndex: number; frames: number[] };
@@ -33,6 +33,9 @@ const layerReducer = (
     case "toggle_layer_visible":
       layer = draft.find((layer) => layer.id === action.id);
       if (layer) {
+      console.log("GHello?")
+      console.log(layer.id);
+
         layer.visible = !layer.visible;
       }
       break;
@@ -55,8 +58,8 @@ const layerReducer = (
       draft.push({
         id: action.id,
         name: action.name,
-        visible: true,
-        locked: false,
+        visible: action.visible != undefined ? action.visible : true,
+        locked: action.locked != undefined  ? action.locked : false,
         frames: [],
       });
       break;

@@ -230,6 +230,8 @@ export default function Home() {
         brushes: animRef.current.brushes,
       });
 
+      console.log(animJSON)
+
       const blob = new Blob([animJSON], { type: "text/plain" });
       const fileName = "AnimProject.anim";
 
@@ -310,7 +312,7 @@ export default function Home() {
     }
 
     for (const layer of json.layers) {
-      layerDispatch({ type: "add_layer", id: layer.id, name: layer.name });
+      layerDispatch({ type: "add_layer", id: layer.id, name: layer.name, visible: layer.visible, locked: layer.locked });
       animRef.current.layers.push(Layer.fromJSON(layer));
     }
     console.log(animRef.current.layers);
@@ -599,6 +601,8 @@ export default function Home() {
       />
 
       <div className="sidebar sidebar--right">
+        {JSON.stringify(layers)}
+
         <div className="btn-group">
           {mode === E_Mode.BRUSH && (
             <Brushes

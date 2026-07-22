@@ -217,6 +217,9 @@ const Stage = memo(
               continue;
             }
 
+            /**
+             * Render Onion Layers => Prev Frames
+             */
             for (let j = 0; j < previousFrames.length; j++) {
               if (isViewport) break;
               const prevFrame = previousFrames[j];
@@ -224,6 +227,9 @@ const Stage = memo(
               renderOnion(prevFrame, "red", opacity);
             }
 
+            /**
+             * Render Onion Layers => Next Frames
+             */
             for (let j = 0; j < nextFrames.length; j++) {
               if (isViewport) break;
               const nextFrame = nextFrames[j];
@@ -231,6 +237,9 @@ const Stage = memo(
               renderOnion(nextFrame, "green", opacity);
             }
 
+            /**
+             * Render Current Frame
+             */
             for (const animObject of frame.animObjects) {
               animObject._render(ctx);
             }

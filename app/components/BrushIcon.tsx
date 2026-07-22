@@ -66,7 +66,7 @@ export default function BrushIcon({ brush, size }: BrushIconProps) {
             <path
               d="M80.4033 50.0439L65.6338 83.7373L44.3594 78.418L54.0547 43.792L80.4033 50.0439Z"
               fill={brush.color}
-              stroke="black"
+              stroke="#353535"
               strokeWidth="3"
             />
             <path

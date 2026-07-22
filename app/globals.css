@@ -42,9 +42,9 @@
     --primary-hover: #f0f0f0;
     --primary-active: #dcdcdc;
 
-    --danger: #ffdcdc;
-    --danger-hover: #ffa5a5;
-    --danger-active: #ff8585;
+    --danger: #ff000036;
+    --danger-hover: #ff000054;
+    --danger-active: #ff000079;
 
     --border-light: #d1d1d1;
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -452,6 +452,6 @@ Retrieved 2026-05-29, License - CC BY-SA 4.0
 }
 
 .popover::after {
-    @apply content-[""] right-[-16.5px] top-0 absolute inline-block w-0 h-0 border-solid border-t-[10px] border-r-0 border-l-[17.3px] border-b-[10px] border-l-[var(--bg-surface)] border-r-transparent border-t-transparent border-b-transparent;
-    filter: drop-shadow(2px 2px 1px var(--border-light));
+    @apply content-[""] right-[-7.9px] top-0 absolute inline-block w-0 h-0 border-solid border-t-[8px] border-r-0 border-l-[8px] border-b-[8px] border-l-[var(--bg-surface)] border-r-transparent border-t-transparent border-b-transparent;
+    filter: drop-shadow(4px 2px 1px var(--border-light));
 }

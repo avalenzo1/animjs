@@ -348,16 +348,26 @@ export class Layer {
 
     [immerable] = true;
 
-    constructor(json: any = {}) {
-        this.name = json.name || `New Layer`;
+    constructor(json: any = {
+        name: "New Layer",
+        id: UUID(),
+        frames: [],
+        locked: false,
+        visible: true,
+        opacity: 1.0
+    }) {
+        this.name = json.name;
         this.id = json.id || UUID();
         this.frames = [];
-        this.addFrame(new Frame(0));
-        this.locked = json.locked || false;
-        this.visible = json.visible || true;
-        this.opacity = json.opacity || 1;
+        this.locked = json.locked;
+        this.visible = json.visible;
+        this.opacity = json.opacity;
+
 
         console.log(`New layer "${this.name}" created`);
+        console.log(json);
+        console.log(this);
+
     }
 
     static fromJSON(json: any) {
