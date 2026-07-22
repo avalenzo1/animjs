@@ -363,10 +363,10 @@ export class Layer {
         this.visible = json.visible;
         this.opacity = json.opacity;
 
+        this.addFrame(new Frame(0))
+
 
         console.log(`New layer "${this.name}" created`);
-        console.log(json);
-        console.log(this);
 
     }
 
