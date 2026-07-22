@@ -601,8 +601,6 @@ export default function Home() {
       />
 
       <div className="sidebar sidebar--right">
-        {JSON.stringify(layers)}
-
         <div className="btn-group">
           {mode === E_Mode.BRUSH && (
             <Brushes
