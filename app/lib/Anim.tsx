@@ -117,16 +117,11 @@ export class Brush {
     color: string;
     lineCap: string;
 
-    constructor(data: BrushProps = {
-        id: UUID(),
-        size: 5,
-        color: "#000000",
-        lineCap: "round"
-    }) {
-        this.id = data.id;
-        this.size = data.size;
-        this.color = data.color;
-        this.lineCap = data.lineCap;
+    constructor(data: any = {}) {
+        this.id = data.id ?? UUID();
+        this.size = data.size ?? 5;
+        this.color = data.color ?? "#000000";
+        this.lineCap = data.lineCap ?? "round";
     }
 };
 export type Point = {x: number, y: number, pressure: number, break?: boolean, deleted?: boolean};
@@ -348,22 +343,15 @@ export class Layer {
 
     [immerable] = true;
 
-    constructor(json: any = {
-        name: "New Layer",
-        id: UUID(),
-        frames: [],
-        locked: false,
-        visible: true,
-        opacity: 1.0
-    }) {
-        this.name = json.name;
-        this.id = json.id || UUID();
+    constructor(json: any) {
+        this.name = json.name ?? "New Layer";
+        this.id = json.id ?? UUID();
         this.frames = [];
-        this.locked = json.locked;
-        this.visible = json.visible;
-        this.opacity = json.opacity;
+        this.locked = json.locked ?? false;
+        this.visible = json.visible ?? true;
+        this.opacity = json.opacity ?? 1.0;
 
-        this.addFrame(new Frame(0))
+        this.addFrame(new Frame(0));
 
 
         console.log(`New layer "${this.name}" created`);

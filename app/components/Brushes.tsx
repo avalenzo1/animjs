@@ -94,17 +94,24 @@ export default function Brushes({
           className={`popover ${isVisible ? "popover--show" : ""}`}
           style={{ left: position.x, top: position.y }}
         >
-          <button className="btn btn--danger" onClick={() => removeBrush()}>
-            <IconTrashFilled />
-          </button>
+          <header className="p-2 flex gap-2 items-center justify-between text-lg font-bold">
+            Options
+            <button className="btn btn--danger" onClick={() => removeBrush()}>
+              <IconTrashFilled />
+            </button>
+          </header>
+          <hr />
           <div>
+            <label>Color: </label><br />
             <input
               value={activeBrush.color}
               onChange={(e) => changeBrushColor(activeBrush, e.target.value)}
               type="color"
             ></input>
           </div>
+          <hr />
           <div>
+            <label>Size: </label><br />
             <input
               value={activeBrush.size}
               onChange={(e) =>
@@ -115,7 +122,9 @@ export default function Brushes({
               max={200}
             ></input>
           </div>
+          <hr />
           <div>
+            <label>Line Cap: </label><br />
             <input
               value={activeBrush.lineCap}
               onChange={(e) => changeBrushLineCap(activeBrush, e.target.value)}

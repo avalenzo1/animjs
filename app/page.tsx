@@ -181,7 +181,7 @@ export default function Home() {
   const addLayer = useCallback(() => {
     if (!animRef.current) return;
 
-    const newLayer = new Layer("New Layer");
+    const newLayer = new Layer({ name: "Layer #" + animRef.current.layers.length });
 
     animRef.current.layers.push(newLayer);
 
